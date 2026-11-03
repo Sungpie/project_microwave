@@ -12,10 +12,10 @@ module play_melody #(
     output reg buzzer,
     output display_blank
 );
-    // 버튼 알림음: 기본 설정에서 2 kHz로 100 ms 동안 출력한다.
+    // 버튼 알림음: 기본 설정에서 2 kHz로 100 ms 동안 출력
     localparam integer BEEP_HALF = CLOCK_HZ / (2 * BEEP_HZ);
     localparam integer BEEP_CYCLES = (CLOCK_HZ / 1000) * BEEP_MS;
-    // 완료 멜로디: C5, E5, G5를 각각 0.5초 동안 재생한다.
+    // 완료 멜로디: C5, E5, G5를 각각 0.5초 동안 재생
     localparam integer NOTE_C = (CLOCK_HZ / (2 * 523) < 1) ? 1 : CLOCK_HZ / (2 * 523);
     localparam integer NOTE_E = (CLOCK_HZ / (2 * 659) < 1) ? 1 : CLOCK_HZ / (2 * 659);
     localparam integer NOTE_G = (CLOCK_HZ / (2 * 784) < 1) ? 1 : CLOCK_HZ / (2 * 784);
@@ -66,7 +66,7 @@ module play_melody #(
                 duration_count <= 0;
                 buzzer <= 1;
             end else if (button_pressed) begin
-                // 버튼을 다시 누르면 알림을 종료하고 버튼 알림음을 재생한다.
+                // 버튼 입력 시 완료 알림 종료 및 버튼 알림음 재생
                 alert_active <= 0;
                 sounding <= 1;
                 tone_count <= 0;

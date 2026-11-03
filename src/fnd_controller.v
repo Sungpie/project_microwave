@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-// Basys 3: 애노드와 세그먼트 출력은 로우 활성이다.
+// Basys 3: 애노드와 세그먼트 출력은 로우 활성
 module fnd_controller(
     input clk,
     input reset,
@@ -30,7 +30,7 @@ module fnd_controller(
             default: begin position = 4'b1111; digit = 0; end
         endcase
 
-        // seg[6:0] = {g,f,e,d,c,b,a}; seg[7]은 소수점이다.
+        // seg[6:0] = {g,f,e,d,c,b,a}, seg[7]: 소수점
         case (digit)
             4'd0: seg = 8'b11000000;
             4'd1: seg = 8'b11111001;

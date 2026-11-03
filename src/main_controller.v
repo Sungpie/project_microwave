@@ -8,7 +8,7 @@ module main_controller #(
     input reset,
     input door_inhibit,
     output [13:0] seg_data, // 남은 시간(초)
-    output reg timeout      // 조리가 완료되면 한 클럭 동안 활성화
+    output reg timeout      // 조리 완료 시 한 클럭 동안 활성화
 );
     localparam [13:0] MAX_SECONDS = 14'd5999; // 99:59
     localparam integer COUNTER_WIDTH = (CLOCK_HZ <= 1) ? 1 : $clog2(CLOCK_HZ);
@@ -41,7 +41,7 @@ module main_controller #(
             else
                 second_counter <= second_counter + 1'b1;
 
-            // 여러 버튼을 동시에 누르면 정지 버튼이 우선한다.
+            // 여러 버튼을 동시에 누르면 정지 버튼 우선 처리
             if (press[2]) begin
                 running <= 1'b0;
             end else begin
