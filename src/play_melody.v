@@ -12,10 +12,10 @@ module play_melody #(
     output reg buzzer,
     output display_blank
 );
-    // Button beep: 2 kHz for 100 ms at the default settings.
+    // 버튼 알림음: 기본 설정에서 2 kHz로 100 ms 동안 출력한다.
     localparam integer BEEP_HALF = CLOCK_HZ / (2 * BEEP_HZ);
     localparam integer BEEP_CYCLES = (CLOCK_HZ / 1000) * BEEP_MS;
-    // Completion melody: C5, E5, G5, each played for half a second.
+    // 완료 멜로디: C5, E5, G5를 각각 0.5초 동안 재생한다.
     localparam integer NOTE_C = (CLOCK_HZ / (2 * 523) < 1) ? 1 : CLOCK_HZ / (2 * 523);
     localparam integer NOTE_E = (CLOCK_HZ / (2 * 659) < 1) ? 1 : CLOCK_HZ / (2 * 659);
     localparam integer NOTE_G = (CLOCK_HZ / (2 * 784) < 1) ? 1 : CLOCK_HZ / (2 * 784);
@@ -30,7 +30,7 @@ module play_melody #(
     reg [TONE_WIDTH-1:0] tone_count;
     reg [TIME_WIDTH-1:0] duration_count;
     reg alert_active;
-    reg [2:0] alert_phase; // 0,2,4: lit and playing; 1,3,5: off
+    reg [2:0] alert_phase; // 0,2,4: 표시등과 소리 켜짐; 1,3,5: 꺼짐
     reg [PHASE_WIDTH-1:0] phase_count;
     reg [TONE_WIDTH-1:0] note_half;
     wire button_pressed = |(btn & ~prev_btn);
@@ -66,7 +66,7 @@ module play_melody #(
                 duration_count <= 0;
                 buzzer <= 1;
             end else if (button_pressed) begin
-                // Any new button press dismisses the alert and starts a beep.
+                // 버튼을 다시 누르면 알림을 종료하고 버튼 알림음을 재생한다.
                 alert_active <= 0;
                 sounding <= 1;
                 tone_count <= 0;
@@ -81,7 +81,7 @@ module play_melody #(
                         buzzer <= 0;
                     end else begin
                         alert_phase <= alert_phase + 1'b1;
-                        buzzer <= alert_phase[0]; // next phase is ON after an OFF
+                        buzzer <= alert_phase[0]; // 꺼진 다음 단계는 켜짐
                     end
                 end else begin
                     phase_count <= phase_count + 1'b1;

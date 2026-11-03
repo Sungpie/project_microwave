@@ -4,10 +4,11 @@ module main_controller #(
     parameter integer CLOCK_HZ = 100_000_000
 )(
     input clk,
-    input [2:0] btn, // [0]: start, [1]: add 30 seconds, [2]: stop
+    input [2:0] btn, // [0]: 시작, [1]: 30초 추가, [2]: 정지
     input reset,
-    output [13:0] seg_data, // remaining time in seconds
-    output reg timeout      // one clock pulse when cooking finishes
+    input door_inhibit,
+    output [13:0] seg_data, // 남은 시간(초)
+    output reg timeout      // 조리가 완료되면 한 클럭 동안 활성화
 );
     localparam [13:0] MAX_SECONDS = 14'd5999; // 99:59
     localparam integer COUNTER_WIDTH = (CLOCK_HZ <= 1) ? 1 : $clog2(CLOCK_HZ);
@@ -18,7 +19,7 @@ module main_controller #(
     reg [COUNTER_WIDTH-1:0] second_counter;
 
     wire [2:0] press = btn & ~prev_btn;
-    wire second_tick = running && (second_counter == CLOCK_HZ - 1);
+    wire second_tick = running && !door_inhibit && (second_counter == CLOCK_HZ - 1);
     wire [14:0] added_seconds = {1'b0, remaining_seconds} + 15'd30
                                  - (second_tick ? 15'd1 : 15'd0);
 
@@ -35,12 +36,12 @@ module main_controller #(
             prev_btn <= btn;
             timeout <= 0;
 
-            if (!running || press[2] || second_tick)
+            if (!running || door_inhibit || press[2] || second_tick)
                 second_counter <= 0;
             else
                 second_counter <= second_counter + 1'b1;
 
-            // Stop has priority when multiple buttons are pressed together.
+            // 여러 버튼을 동시에 누르면 정지 버튼이 우선한다.
             if (press[2]) begin
                 running <= 1'b0;
             end else begin
@@ -56,7 +57,9 @@ module main_controller #(
                 if (second_tick && remaining_seconds == 1 && !press[1]) begin
                     running <= 1'b0;
                     timeout <= 1'b1;
-                end else if (press[0] && (remaining_seconds != 0 || press[1]))
+                end else if (door_inhibit)
+                    running <= 1'b0;
+                else if (press[0] && (remaining_seconds != 0 || press[1]))
                     running <= 1'b1;
             end
         end

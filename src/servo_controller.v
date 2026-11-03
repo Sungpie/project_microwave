@@ -9,10 +9,11 @@ module servo_controller #(
     input clk,
     input reset,
     input clean_door,
-    output door
+    output door,
+    output door_inhibit
     );
 
-    // Use 64-bit intermediate arithmetic to avoid overflow at 100 MHz.
+    // 100 MHz에서 오버플로를 방지하기 위해 중간 연산에 64비트를 사용한다.
     localparam integer FRAME_CYCLES = (64'd1 * CLOCK_HZ * FRAME_US) / 1_000_000;
     localparam integer CLOSED_CYCLES = (64'd1 * CLOCK_HZ * CLOSED_US) / 1_000_000;
     localparam integer OPEN_CYCLES = (64'd1 * CLOCK_HZ * OPEN_US) / 1_000_000;
@@ -23,7 +24,10 @@ module servo_controller #(
     reg prev_door;
     reg door_open;
 
-    // Change the requested position only once per debounced button press.
+    // 위치 레지스터가 바뀌기 전 버튼 에지에서도 동작을 억제한다.
+    assign door_inhibit = door_open || (clean_door && !prev_door);
+
+    // 디바운스된 버튼을 한 번 누를 때마다 목표 위치를 한 번만 변경한다.
     always @(posedge clk or posedge reset) begin
         if (reset) begin
             prev_door <= 0;
@@ -35,7 +39,7 @@ module servo_controller #(
         end
     end
 
-    // Update the pulse width at a frame boundary to avoid partial PWM pulses.
+    // 불완전한 PWM 펄스를 방지하도록 프레임 경계에서 펄스 폭을 갱신한다.
     always @(posedge clk or posedge reset) begin
         if (reset) begin
             frame_count <= 0;

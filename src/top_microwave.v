@@ -20,11 +20,12 @@ module top_microwave(
     wire timeout;
     wire display_blank;
     wire clean_door;
+    wire door_inhibit;
 
     debouncer u_debouncer_start (
         .clk(clk),
         .reset(reset),
-        .noisy_btn(noisy_start),  // raw noisy button input
+        .noisy_btn(noisy_start),  // 노이즈가 포함된 원본 버튼 입력
         .clean_btn(clean_start)
     );
 
@@ -46,6 +47,7 @@ module top_microwave(
         .clk(clk),
         .btn({clean_stop, clean_add30, clean_start}),   
         .reset(reset),
+        .door_inhibit(door_inhibit),
         .seg_data(seg_data),
         .timeout(timeout)
     );
@@ -79,6 +81,7 @@ module top_microwave(
         .clk(clk),
         .reset(reset),
         .clean_door(clean_door),
+        .door_inhibit(door_inhibit),
         .door(door)
     );
 

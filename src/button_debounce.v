@@ -9,14 +9,14 @@
 module debouncer #(parameter DEBOUNCE_LIMIT = 20'd999_999) (
     input      clk,
     input      reset,
-    input      noisy_btn,  // raw noisy button input
+    input      noisy_btn,  // 노이즈가 포함된 원본 버튼 입력
     output reg clean_btn
 );
     reg [19:0] r_count;
     reg r_btn_state=0;
 
     always @(posedge clk or posedge reset) begin
-        if (reset) begin   // active-high reset
+        if (reset) begin   // 하이 활성 리셋
             r_count <= 0;
             r_btn_state <= 0;
             clean_btn <= 0;
@@ -28,7 +28,7 @@ module debouncer #(parameter DEBOUNCE_LIMIT = 20'd999_999) (
             else begin  // 상태가 충분히 오랫동안 유지됨(10ms)
                 r_btn_state <= noisy_btn;
                 clean_btn <= noisy_btn;
-                r_count <= 0;  // clear하면 다음 변경을 다시 감지할 수 있음
+                r_count <= 0;  // 초기화하면 다음 변경을 다시 감지할 수 있음
             end
         end
     end
