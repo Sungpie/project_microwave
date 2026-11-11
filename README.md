@@ -41,18 +41,32 @@ Verilog로 작성한 전자레인지 동작 모형입니다. 버튼으로 시간
 | `src/play_melody.v` | 버튼 입력음과 종료 알림 제어 |
 | `src/servo_controller.v` | 서보 모터 PWM 제어 |
 
-## 사용 방법
-
-Vivado 등 Verilog 개발 도구에서 `src`의 파일 6개를 소스로 추가하고 `top_microwave`를 최상위 모듈로 지정합니다. 기본 설정은 100 MHz 클록과 Basys 3의 액티브 로우 7세그먼트를 기준으로 합니다. 실제 보드에서 사용하려면 보드에 맞는 핀 제약 파일(XDC)을 별도로 추가하세요.
-
 ## 트러블슈팅
 
-### 1. 버튼을 한 번 눌렀는데 여러 번 입력되는 문제
+- **문제** — Vivado 합성 과정에서 하나의 신호를 여러 `always` 블록에서 제어하여 Multi-Driver 오류가 발생했습니다.
 
-- **문제와 원인:** 기계식 버튼의 접점이 짧은 시간 동안 여러 번 붙었다 떨어지는 채터링으로 인해 입력이 반복될 수 있습니다.
-- **해결 과정:** `debouncer`에서 입력 상태가 충분히 안정적으로 유지된 뒤에만 `clean_btn`을 변경하도록 했습니다. 기본 100 MHz 클록에서 약 10 ms 동안 입력을 확인합니다.
+  Vivado에서 `DRC MDRV-1: Multiple Driver Nets` 오류가 `u_main_controller/running` 신호에 대해 보고되었습니다.
 
-### 2. 서보 모터 제어 신호가 불안정해질 수 있는 문제
+- **원인** — 동일한 레지스터에 복수의 순차 논리 블록이 값을 할당하면서 구동 충돌이 발생했습니다.
 
-- **문제와 원인:** PWM 주기 중간에 펄스 폭을 바꾸면 완전하지 않은 펄스가 발생해 서보 제어에 영향을 줄 수 있습니다.
-- **해결 과정:** 문 버튼의 상승 에지에서 목표 위치를 전환하고, 실제 PWM 펄스 폭은 다음 프레임 경계에서 갱신하도록 했습니다. 또한 100 MHz 기준 클록 수 계산에 64비트 중간 연산을 사용해 오버플로를 방지했습니다.
+  ```verilog
+  always @(posedge clk)
+      if (door_inhibit) running <= 1'b0;
+
+  always @(posedge clk)
+      if (press[0]) running <= 1'b1;
+  ```
+
+- **해결** — `running` 제어 로직을 하나의 `always` 블록으로 통합했습니다. 정지 버튼을 우선 처리하고, 나머지 조건은 조리 완료, 문 열림, 시작 버튼 순으로 확인합니다.
+
+  ```verilog
+  if (second_tick && remaining_seconds == 1 && !press[1]) begin
+      running <= 1'b0;
+      timeout <= 1'b1;
+  end else if (door_inhibit)
+      running <= 1'b0;
+  else if (press[0] && (remaining_seconds != 0 || press[1]))
+      running <= 1'b1;
+  ```
+
+- **결과** — Multi-Driver 오류를 해결하고 `running` 신호의 제어 우선순위를 명확히 했습니다.
