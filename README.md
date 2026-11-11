@@ -45,7 +45,9 @@ Verilog로 작성한 전자레인지 동작 모형입니다. 버튼으로 시간
 
 - **문제** — Vivado 합성 과정에서 하나의 신호를 여러 `always` 블록에서 제어하여 Multi-Driver 오류가 발생했습니다.
 
-  Vivado에서 `DRC MDRV-1: Multiple Driver Nets` 오류가 `u_main_controller/running` 신호에 대해 보고되었습니다.
+  ![Vivado DRC MDRV-1 오류 화면](docs/vivado-multi-driver-error.png)
+
+  *vivado 환경에서 출력된 오류 화면*
 
 - **원인** — 동일한 레지스터에 복수의 순차 논리 블록이 값을 할당하면서 구동 충돌이 발생했습니다.
 
